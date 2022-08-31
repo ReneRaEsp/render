@@ -8,7 +8,6 @@ import connection from './connection'
 //routes
 import routesAuth from './routes/routesAuth'
 import routesUser from './routes/routesUser'
-import routesRoles from './routes/routesRoles'
 import routesTech from './routes/routesTechnology'
 import routesTeam from './routes/routesTeam'
 import routesPublication from './routes/routesPublication'
@@ -30,7 +29,6 @@ startCors(app)
 //Routes
 
 app.use('/api', routesAuth)
-app.use('/api', routesRoles)
 app.use('/api', routesTech)
 app.use('/api', routesTeam)
 app.use('/api', routesPublication)

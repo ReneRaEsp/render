@@ -36,7 +36,6 @@ const getCategoryById = async (req, res) => {
       {
         path: 'projects',
         model: 'project',
-        select: 'title image team',
       },
       {
         path: 'publications',

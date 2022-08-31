@@ -17,7 +17,6 @@ const createProject = async (req, res) => {
     team,
     categories,
     technologies,
-    participants,
   } = req.body
   try {
     const project = await Project.create({
@@ -29,34 +28,31 @@ const createProject = async (req, res) => {
       team,
       categories,
       technologies,
-      participants,
     })
-
-    await User.findByIdAndUpdate(author, {
-      $addToSet: { projects: project },
-    })
-
-    participants.map(async (participant) => {
-      await User.findByIdAndUpdate(participant, {
-        $addToSet: { participants: participant },
+    if (author) {
+      await User.findByIdAndUpdate(author, {
+        $addToSet: { projects: project },
       })
-    })
-
-    categories.map(async (category) => {
-      await Category.findByIdAndUpdate(category, {
-        $addToSet: { participants: category },
+    }
+    if (categories) {
+      categories.forEach(async (category) => {
+        await Category.findByIdAndUpdate(category, {
+          $addToSet: { projects: project },
+        })
       })
-    })
-
-    technologies.map(async (technology) => {
-      await Technology.findByIdAndUpdate(technology, {
-        $addToSet: { technologies: technology },
+    }
+    if (technologies) {
+      technologies.forEach(async (technology) => {
+        await Technology.findByIdAndUpdate(technology, {
+          $addToSet: { projects: project },
+        })
       })
-    })
-
-    await Team.findByIdAndUpdate(team, {
-      project: project,
-    })
+    }
+    if (team) {
+      await Team.findByIdAndUpdate(team, {
+        project: project,
+      })
+    }
 
     res.status(201).json({
       message: 'Project created',
@@ -71,7 +67,7 @@ const createProject = async (req, res) => {
 }
 
 const addElement = async (req, res) => {
-  const { project, team } = req.body
+  const { project, team, category, technology } = req.body
   let msg = ''
   try {
     if (team) {
@@ -79,6 +75,38 @@ const addElement = async (req, res) => {
         team,
       })
       msg = 'Team added to project'
+    } else if (category) {
+      await Project.findByIdAndUpdate(
+        project,
+        {
+          $addToSet: { categories: category },
+        },
+        { new: true, useFindAndModify: false },
+      )
+      await Category.findByIdAndUpdate(
+        category,
+        {
+          $addToSet: { projects: project },
+        },
+        { new: true, useFindAndModify: false },
+      )
+      msg = 'Category added to project'
+    } else if (technology) {
+      await Project.findByIdAndUpdate(
+        project,
+        {
+          $addToSet: { technologies: technology },
+        },
+        { new: true, useFindAndModify: false },
+      )
+      await Technology.findByIdAndUpdate(
+        technology,
+        {
+          $addToSet: { projects: project },
+        },
+        { new: true, useFindAndModify: false },
+      )
+      msg = 'Technology added to project'
     }
     res.status(200).json(msg)
   } catch (error) {
@@ -90,7 +118,7 @@ const addElement = async (req, res) => {
 }
 
 const removeElement = async (req, res) => {
-  const { project, technology, category, participant } = req.body
+  const { project, technology, category } = req.body
   try {
     let msg = ''
     if (technology) {
@@ -109,68 +137,10 @@ const removeElement = async (req, res) => {
         $pull: { projects: project },
       })
       msg = 'Category removed'
-    } else if (participant) {
-      await Project.findByIdAndUpdate(category, {
-        $pull: { categories: category },
-      })
-      await User.findByIdAndUpdate(participant, {
-        $pull: { projects: project },
-      })
-      msg = 'Technology removed'
     }
     res.status(200).json({ msg })
   } catch (error) {
     res.status(500).json(error)
-  }
-}
-
-const addCategoryToProject = async (req, res) => {
-  const { projectId, categoryId } = req.body
-  try {
-    await Project.findByIdAndUpdate(
-      projectId,
-      {
-        $addToSet: { categories: categoryId },
-      },
-      { new: true, useFindAndModify: false },
-    )
-    await Category.findByIdAndUpdate(
-      categoryId,
-      {
-        $addToSet: { projects: projectId },
-      },
-      { new: true, useFindAndModify: false },
-    )
-    res.send({ message: 'Category added to project' })
-  } catch (error) {
-    res
-      .status(500)
-      .json({ message: 'Error while adding category to project', error })
-  }
-}
-
-const addTechnologyToProject = async (req, res) => {
-  const { projectId, technologyId } = req.body
-  try {
-    await Project.findByIdAndUpdate(
-      projectId,
-      {
-        $addToSet: { technologies: technologyId },
-      },
-      { new: true, useFindAndModify: false },
-    )
-    await Technology.findByIdAndUpdate(
-      technologyId,
-      {
-        $addToSet: { projects: projectId },
-      },
-      { new: true, useFindAndModify: false },
-    )
-    res.send({ message: 'Technology added to project' })
-  } catch (error) {
-    res
-      .status(500)
-      .json({ message: 'Error while adding technology to project', error })
   }
 }
 
@@ -179,6 +149,19 @@ const GetProjects = async (req, res) => {
   const options = {
     page: page ?? 1,
     limit: limit ?? 10,
+    populate: {
+      path: 'team',
+      model: 'team',
+      populate: [
+        {
+          path: 'devs',
+          model: 'user',
+          select: {
+            password: 0,
+          },
+        },
+      ],
+    },
   }
   let findAll = {
     isActive: true,
@@ -208,13 +191,23 @@ const GetAllProjects = async (req, res) => {
   const options = {
     page: page ?? 1,
     limit: limit ?? 10,
+    populate: {
+      path: 'team',
+      model: 'team',
+      populate: [
+        {
+          path: 'devs',
+          model: 'user',
+          select: {
+            password: 0,
+          },
+        },
+      ],
+    },
   }
-  const findAll = {}
   const findByTitle = {
-    isActive: true,
     title: { $regex: title, $options: 'i' },
   }
-  query = findAll
   if (title) query = findByTitle
   try {
     const projects = await Project.paginate(query, options)
@@ -241,12 +234,15 @@ const GetProjectById = async (req, res) => {
         },
       },
       {
-        path: 'participants',
-        model: 'user',
-      },
-      {
         path: 'team',
         model: 'team',
+        populate: {
+          path: 'devs',
+          model: 'user',
+          select: {
+            password: 0,
+          },
+        },
       },
       {
         path: 'categories',
@@ -416,11 +412,10 @@ export default {
   GetAllProjects,
   GetProjectById,
   UpdateProject,
-  addCategoryToProject,
-  addTechnologyToProject,
   activateProject,
   deactivateProject,
   removeProject,
   updateImageProject,
+  addElement,
   removeElement,
 }

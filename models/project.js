@@ -33,21 +33,12 @@ const projectSchema = new Schema(
       {
         type: Schema.ObjectId,
         ref: 'category',
-        unique: true,
       },
     ],
     technologies: [
       {
         type: Schema.ObjectId,
         ref: 'technology',
-        unique: true,
-      },
-    ],
-    participants: [
-      {
-        type: Schema.ObjectId,
-        ref: 'user',
-        unique: true,
       },
     ],
     isActive: {

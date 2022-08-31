@@ -104,8 +104,12 @@ const signIn = async (req, res) => {
         const token = jwt.sign({ id: searchEmail._id }, SECRET, {
           expiresIn: '12d',
         })
+
+        delete searchEmail._doc.password
+        
         res.status(200).json({
           token,
+          user: searchEmail
         })
       } else {
         res.status(204).json({

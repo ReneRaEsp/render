@@ -39,7 +39,6 @@ const teamSchema = new Schema({
   ],
   isActive: {
     type: Boolean,
-    default: true,
   },
 })
 
