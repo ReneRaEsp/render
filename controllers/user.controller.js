@@ -6,24 +6,27 @@ let path = require('path')
 
 const searchxId = async (req, res) => {
   const id = req.params.id
-  const buscado = await User.findById(id)
+  const options = { select: { password: 0 } }
+  const buscado = await User.findById(id, options)
+    .populate([
+      {
+        path: "projects",
+        model: "project",
+      },
+      {
+        path: "teams",
+        model: "team",
+        populate: {
+          path: "project",
+          model: "project",
+        }
+      }
+    ])
 
   if (buscado) {
-    const UserSprint = {
-      id: buscado.id,
-      firstName: buscado.firstName,
-      lastName: buscado.lastName,
-      description: buscado.description,
-      rolDes: buscado.rolDes,
-      phone: buscado.phone,
-      email: buscado.email,
-      role: buscado.role,
-      status: buscado.status,
-      avatar: buscado.avatar,
-    }
-
+    
     res.status(200).json({
-      UserSprint,
+      UserSprint: buscado
     })
   } else
     res.status(204).json({

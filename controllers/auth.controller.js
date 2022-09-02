@@ -22,6 +22,7 @@ const signUp = async (req, res) => {
       firstName: firstName,
       lastName: lastName,
       phone: phone,
+      isActive: true,
     })
     await newUser.save()
     const token = jwt.sign({ id: newUser._id }, SECRET, { expiresIn: '12d' })
@@ -50,6 +51,7 @@ const signUpModerator = async (req, res) => {
       firstName: firstName,
       lastName: lastName,
       phone: phone,
+      isActive: true,
     })
     await newUser.save()
     const token = jwt.sign({ id: newUser._id }, SECRET, { expiresIn: '12d' })
@@ -78,6 +80,7 @@ const signUpAdmin = async (req, res) => {
       firstName: firstName,
       lastName: lastName,
       phone: phone,
+      isActive: true,
     })
     await newUser.save()
     const token = jwt.sign({ id: newUser._id }, SECRET, { expiresIn: '12d' })
@@ -106,10 +109,10 @@ const signIn = async (req, res) => {
         })
 
         delete searchEmail._doc.password
-        
+
         res.status(200).json({
           token,
-          user: searchEmail
+          user: searchEmail,
         })
       } else {
         res.status(204).json({

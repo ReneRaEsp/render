@@ -12,6 +12,13 @@ const addTeam = async (req, res) => {
       devs: req.body.devs,
       isActive: true,
     })
+    if (req.body.devs) {
+      req.body.devs.forEach(async (dev) => {
+        await User.findByIdAndUpdate(dev, {
+          $addToSet: { teams: team },
+        })
+      })
+    }
     res.status(201).json(team)
   } catch (e) {
     res.status(500).json({

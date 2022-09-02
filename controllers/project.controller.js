@@ -160,6 +160,10 @@ const GetProjects = async (req, res) => {
             password: 0,
           },
         },
+        {
+          path: 'technologies',
+          model: 'technology',
+        },
       ],
     },
   }
@@ -236,13 +240,19 @@ const GetProjectById = async (req, res) => {
       {
         path: 'team',
         model: 'team',
-        populate: {
-          path: 'devs',
-          model: 'user',
-          select: {
-            password: 0,
+        populate: [
+          {
+            path: 'devs',
+            model: 'user',
+            select: {
+              password: 0,
+            },
           },
-        },
+          {
+            path: 'technologies',
+            model: 'technology',
+          },
+      ]
       },
       {
         path: 'categories',
