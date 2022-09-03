@@ -34,14 +34,14 @@ const createProject = async (req, res) => {
         $addToSet: { projects: project },
       })
     }
-    if (categories) {
+    if (categories.length) {
       categories.forEach(async (category) => {
         await Category.findByIdAndUpdate(category, {
           $addToSet: { projects: project },
         })
       })
     }
-    if (technologies) {
+    if (technologies.length) {
       technologies.forEach(async (technology) => {
         await Technology.findByIdAndUpdate(technology, {
           $addToSet: { projects: project },
@@ -49,9 +49,15 @@ const createProject = async (req, res) => {
       })
     }
     if (team) {
+      let teamFind = await Team.findById(team)
       await Team.findByIdAndUpdate(team, {
-        project: project,
+        project: project
       })
+      for (let dev of teamFind.devs) {
+        await User.findByIdAndUpdate(dev, {
+          $addToSet: { projects: project },
+        })
+      }
     }
 
     res.status(201).json({
@@ -73,6 +79,12 @@ const addElement = async (req, res) => {
     if (team) {
       await Project.findByIdAndUpdate(project, {
         team,
+      })
+      teamFind = Team.findOne(team)
+      teamFind.devs.forEach(async (dev) => {
+        await Team.findByIdAndUpdate(dev, {
+          $addToSet: { projects: project },
+        })
       })
       msg = 'Team added to project'
     } else if (category) {
@@ -148,7 +160,7 @@ const GetProjects = async (req, res) => {
   const { page, limit, title } = req.query
   const options = {
     page: page ?? 1,
-    limit: limit ?? 10,
+    limit: limit ?? 20,
     populate: {
       path: 'team',
       model: 'team',
@@ -252,7 +264,7 @@ const GetProjectById = async (req, res) => {
             path: 'technologies',
             model: 'technology',
           },
-      ]
+        ],
       },
       {
         path: 'categories',

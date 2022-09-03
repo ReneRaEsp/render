@@ -13,7 +13,6 @@ const technologySchema = new Schema({
     {
       type: Schema.ObjectId,
       ref: 'project',
-      unique: true
     },
   ],
 })

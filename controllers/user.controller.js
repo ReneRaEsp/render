@@ -7,26 +7,24 @@ let path = require('path')
 const searchxId = async (req, res) => {
   const id = req.params.id
   const options = { select: { password: 0 } }
-  const buscado = await User.findById(id, options)
-    .populate([
-      {
-        path: "projects",
-        model: "project",
+  const buscado = await User.findById(id, options).populate([
+    {
+      path: 'projects',
+      model: 'project',
+    },
+    {
+      path: 'teams',
+      model: 'team',
+      populate: {
+        path: 'project',
+        model: 'project',
       },
-      {
-        path: "teams",
-        model: "team",
-        populate: {
-          path: "project",
-          model: "project",
-        }
-      }
-    ])
+    },
+  ])
 
   if (buscado) {
-    
     res.status(200).json({
-      UserSprint: buscado
+      UserSprint: buscado,
     })
   } else
     res.status(204).json({
@@ -100,10 +98,12 @@ const listUser = async (req, res) => {
       {
         path: 'teams',
         model: 'team',
-        populate: {
-          path: 'projects',
-          model: 'project',
-        },
+        populate: [
+          {
+            path: 'project',
+            model: 'project',
+          },
+        ],
       },
     ],
   }
@@ -115,7 +115,7 @@ const listUser = async (req, res) => {
     ],
   }
 
-  name ? (query = findByName) : null
+  if (name) query = findByName
 
   try {
     const list = await User.paginate(query, options)

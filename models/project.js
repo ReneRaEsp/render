@@ -15,11 +15,11 @@ const projectSchema = new Schema(
     },
     image: {
       type: String,
-      required: true,
+      required: false,
     },
     video: {
       type: String,
-      required: true,
+      required: false,
     },
     author: {
       type: Schema.ObjectId,
